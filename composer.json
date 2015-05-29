@@ -1,0 +1,23 @@
+{
+	"name": "mreschke/keystone",
+	"type": "library",
+	"description": "Keystone Key/Value Store",
+	"keywords": ["keystone", "redis", "key value", "nosql"],
+	"homepage": "http://github.com/mreschke/keystone",
+	"license": "MIT",
+	"support": {
+		"issues": "https://github.com/mreschke/keystone/issues"
+	},
+	"authors": [
+		{
+			"name": "Matthew Reschke",
+			"email": "mail@mreschke.com",
+			"homepage": "http://mreschke.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Mreschke\\Keystone\\": ""
+		}
+	}
+}
