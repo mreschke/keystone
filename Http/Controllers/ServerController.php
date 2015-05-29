@@ -1,6 +1,7 @@
 <?php namespace Mreschke\Keystone\Http\Controllers;
 
 use Parsedown;
+use Mreschke\Helpers\Guest;
 use Mreschke\Keystone\KeystoneInterface;
 use Mreschke\Keystone\Http\Controllers\Controller;
 
@@ -19,12 +20,32 @@ class ServerController extends Controller {
 	 */
 	public function index()
 	{
-		return Parsedown::instance()->text($this->keystone->readme());
+		$browser = Guest::getBrowser();
+		$isCurl = preg_match("/curl/i", $browser);
+
+		$content = $this->keystone->readme();
+		if ($isCurl) {
+			return $content;
+		} else {
+			return Parsedown::instance()->text($content);
+		}
 	}
 
 	public function namespaces()
 	{
-		return json_encode($this->keystone->namespaces());
+		return response()->json($this->keystone->namespaces());
+	}
+
+	public function keys()
+	{
+		return response()->json($this->keystone->ns('dynatron/vfi')->keys());
+	}
+
+	public function get()
+	{
+		return response()->json(
+			$this->keystone->ns('dynatron/vfi')->get('client:5975:attributes')
+		);
 	}
 
 }

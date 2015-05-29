@@ -11,9 +11,13 @@
 |
 */
 
-// Remember this is used in Lumen which uses nikic/FastRoute instead of Illuminate Router
+// Remember this routes-server.php is used in Lumen
+// which uses nikic/FastRoute instead of Illuminate Router
 
 $app->get('/', 'ServerController@index');
 
 $app->get('/namespaces', 'ServerController@namespaces');
 
+$app->get('/keys', 'ServerController@keys');
+
+$app->get('/get', 'ServerController@get');
