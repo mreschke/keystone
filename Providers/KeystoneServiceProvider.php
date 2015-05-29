@@ -1,5 +1,6 @@
 <?php namespace Mreschke\Keystone\Providers;
 
+use Config;
 use Module;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,10 +26,16 @@ class KeystoneServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$app = $this->app;
-		$app->group(['namespace' => 'Mreschke\Keystone\Http\Controllers'], function($app) {
-			require __DIR__.'/../Http/routes-server.php';
-		});
+		// FIXME, only do this if server
+		// If not server, but mrcore app, then mrcore modules will take care of loading the routes, no need here
+		$isServer = Config::get('database.redis.keystone.is_server', false);
+
+		if ($isServer) {
+			$app = $this->app;
+			$app->group(['namespace' => 'Mreschke\Keystone\Http\Controllers'], function($app) {
+				require __DIR__.'/../Http/routes-server.php';
+			});
+		}
 		
 	}
 
