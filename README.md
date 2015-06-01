@@ -93,4 +93,41 @@ have something like user/{id}/checkins, you might already have a full CheckinsCo
 put user/checkins there and not in UserControllers.
 
 
+## Response
+
+Both single and collection returns should be namespaces
+
+	{
+		"data": {
+			...
+		}
+	}
+
+or
+
+	{
+		"data": [
+			{ ... },
+			{ ... }
+		]
+	}
+
+This gives you the ability to add metadata (status, pagination...) as needed.  If you nest data (like comments below)
+also use same data namespace
+
+	{
+		"data": {
+			"name": "Phil Sturgeon",
+			"id": "511501255"
+			"comments": {
+				"data": [
+					{
+						"id": 123423
+						"text": "MongoDB is web-scale!"
+					}
+				]
+			}
+		}
+	}
+
 

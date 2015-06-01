@@ -20,4 +20,4 @@ $app->get('/namespaces', 'ServerController@namespaces');
 
 $app->get('/keys', 'ServerController@keys');
 
-$app->get('/get', 'ServerController@get');
+$app->get('/{key:[0-9A-Za-z:/\-_]+}', 'ServerController@get');

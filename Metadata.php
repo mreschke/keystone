@@ -1,25 +1,29 @@
 <?php namespace Mreschke\Keystone;
 
-use Config;
-use Illuminate\Redis\Database as RedisDatabase;
+use Predis\Client as Predis;
 
 /**
- * Keystone Metadata
+ * Keystone Native Metadata
  * @copyright 2014 Matthew Reschke
  * @license http://mreschke.com/license/mit
  * @author Matthew Reschke <mail@mreschke.com>
 */
-class Meta
+class Metadata
 {
 	protected $redis;
 	protected $prefix;
 	protected $ns;
 
-	public function __construct(RedisDatabase $redis)
+	public function __construct($config)
 	{
-		$this->redis  = $redis->connection('keystone');
-		$this->prefix = Config::get('database.redis.keystone.prefix', 'keystone:');
-		$this->ns = Config::get('database.redis.keystone.metadata_namespace', 'dynatron/keystone');
+		$this->redis = new Predis([
+			'scheme' => 'tcp',
+			'host' => $config['host'],
+			'port' => $config['port'],
+			'database' => $config['database']
+		]);		
+		$this->prefix = $config['prefix'];
+		$this->ns = $config['metadata_namespace'];
 	}
 
 	/**

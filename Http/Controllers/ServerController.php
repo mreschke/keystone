@@ -24,33 +24,16 @@ class ServerController extends Controller {
 		$isCurl = preg_match("/curl/i", $browser);
 
 		$content = $this->keystone->readme();
-		if ($isCurl) {
-			return $content;
-		} else {
-			return "
-			<html>
-				<head>
-					<link href='https://bootswatch.com/simplex/bootstrap.min.css' rel='stylesheet'>
-				</head>
-				<body style='margin: 50px 15px 15px 15px'>
-					<div class='container'>
-						<div class='panel panel-default'>
-							<div class='panel-heading'>README.md</div>
-							<div class='panel-body'>
-								".Parsedown::instance()->text($content)."	
-							</div>
-						</div>
-					</div>
-				</body>
-			</html>
-			";
-
-		}
+		return $isCurl ? $content : view('keystone::server.index', compact('content'));
 	}
 
 	public function namespaces()
 	{
-		return response()->json($this->keystone->namespaces());
+		#return response()->json($this->keystone->namespaces());
+		#test
+		$x = $this->keystone->namespaces();
+		$x[] = 'added by rest serve';
+		return response()->json($x);
 	}
 
 	public function keys()
@@ -58,10 +41,21 @@ class ServerController extends Controller {
 		return response()->json($this->keystone->ns('dynatron/vfi')->keys());
 	}
 
-	public function get()
+	public function get($key)
 	{
+		if (!str_contains($key, '::')) {
+			// Convert / path into :: path
+			$tmp = explode('/', $key);
+			$ns = $tmp[0].'/'.$tmp[1];
+			array_shift($tmp); array_shift($tmp);
+			$path = implode(':', $tmp);
+			$key = "$ns::$path";
+		}
+
+		//ex: http://keystone.xendev1.dynatronsoftware.com/dynatron/vfi::client:5975:attributes
+		//ex: http://keystone.xendev1.dynatronsoftware.com/dynatron/metric::ebis-lbr-gp-perc:info
 		return response()->json(
-			$this->keystone->ns('dynatron/vfi')->get('client:5975:attributes')
+			$this->keystone->get($key)
 		);
 	}
 

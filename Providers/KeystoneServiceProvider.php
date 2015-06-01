@@ -1,7 +1,7 @@
 <?php namespace Mreschke\Keystone\Providers;
 
-use Config;
-use Module;
+use Mreschke\Keystone\Keystone;
+use GuzzleHttp\Client as Guzzle;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -26,9 +26,7 @@ class KeystoneServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		// FIXME, only do this if server
-		// If not server, but mrcore app, then mrcore modules will take care of loading the routes, no need here
-		$isServer = Config::get('database.redis.keystone.is_server', false);
+		$isServer = $this->app['config']['keystone.server'];
 
 		if ($isServer) {
 			$app = $this->app;
@@ -36,6 +34,9 @@ class KeystoneServiceProvider extends ServiceProvider {
 				require __DIR__.'/../Http/routes-server.php';
 			});
 		}
+
+		// Load Views
+		$this->loadViewsFrom(__DIR__.'/../Views', 'keystone');
 		
 	}
 
@@ -46,9 +47,17 @@ class KeystoneServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		// Bind Aliases
+		// Bind
+		$this->app->bind('Mreschke\Keystone\Keystone', function() {
+			return new Keystone($this->app);
+		});
+
+		// Bind aliases
 		$this->app->alias('Mreschke\Keystone\Keystone', 'Mreschke\Keystone');
 		$this->app->alias('Mreschke\Keystone\Keystone', 'Mreschke\Keystone\KeystoneInterface');
+
+		// Merge config
+		$this->mergeConfigFrom(__DIR__.'/../Config/keystone.php', 'keystone');
 
 		// Register our Artisan Commands
 		$this->commands('Mreschke\Keystone\Console\Commands\KeystoneCommand');		
