@@ -21,12 +21,12 @@ return [
 			'max_redis_size' => env('KEYSTONE_MAX_REDIS_SIZE', 4096),
 		],
 
-		/*'remote' => [
+		'remote' => [
 			'driver' => 'http',
-			'url' => env('KEYSTONE_URL', 'http://keystone.example.net'),
+			'url' => env('KEYSTONE_URL', 'http://keystone.xendev1.dynatronsoftware.com'),
 			'secret' => env('KEYSTONE_SECRET', 'xyz'),
 			'cache' => env('KEYSTONE_CACHE', false),
-		],*/
+		],
 
 	],
 
