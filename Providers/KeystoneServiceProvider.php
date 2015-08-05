@@ -26,7 +26,10 @@ class KeystoneServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$isServer = $this->app['config']['keystone.server'];
+		// Define publishing rules
+		$this->definePublishing();
+
+		$isServer = $this->app['config']['mreschke.keystone.server'];
 
 		if ($isServer) {
 			$app = $this->app;
@@ -48,7 +51,7 @@ class KeystoneServiceProvider extends ServiceProvider {
 	public function register()
 	{
 		// Bind
-		$this->app->bind('Mreschke\Keystone\Keystone', function() {
+		$this->app->singleton('Mreschke\Keystone\Keystone', function() {
 			return new Keystone($this->app);
 		});
 
@@ -57,10 +60,34 @@ class KeystoneServiceProvider extends ServiceProvider {
 		$this->app->alias('Mreschke\Keystone\Keystone', 'Mreschke\Keystone\KeystoneInterface');
 
 		// Merge config
-		$this->mergeConfigFrom(__DIR__.'/../Config/keystone.php', 'keystone');
+		$this->mergeConfigFrom(__DIR__.'/../Config/keystone.php', 'mreschke.keystone');
 
 		// Register our Artisan Commands
 		$this->commands('Mreschke\Keystone\Console\Commands\KeystoneCommand');		
+	}
+
+	/**
+	 * Define publishing rules
+	 * 
+	 * @return void
+	 */
+	private function definePublishing()
+	{
+		# App base path
+		$path = realpath(__DIR__.'/../');
+
+		// Config publishing rules
+		// ./artisan vendor:publish --tag="mreschke.keystone.configs"
+		$this->publishes([
+			"$path/Config" => base_path('/config/mreschke'),
+		], 'mreschke.keystone.configs');
+
+		// Seed publishing rules
+		// ./artisan vendor:publish --tag="mrcore.wiki.seeds"
+		/*$this->publishes([
+			"$path/Database/Seeds" => base_path('/database/seeds'),
+		], 'mrcore.wiki.seeds');*/
+
 	}
 
 	/**

@@ -3,14 +3,15 @@
 return [
 
 	// Default connection
-	'default' => env('KEYSTONE_DRIVER', 'default'),
+	'default' => env('KEYSTONE_DRIVER', 'native'),
 
 
 	// Keystone connections
 	'connections' => [
 		
-		'default' => [
+		'native' => [
 			'driver' => 'native',
+			'vendor' => env('KEYSTONE_VENDOR', 'mreschke/keystone'),
 			'host' => env('KEYSTONE_HOST', '127.0.0.1'),
 			'port' => env('KEYSTONE_PORT', 6379),
 			'database' => env('KEYSTONE_DATABASE', 0),
@@ -23,14 +24,18 @@ return [
 
 		'remote' => [
 			'driver' => 'http',
-			'url' => env('KEYSTONE_URL', 'http://keystone.xendev1.dynatronsoftware.com'),
-			'secret' => env('KEYSTONE_SECRET', 'xyz'),
-			'cache' => env('KEYSTONE_CACHE', false),
+			'vendor' => env('KEYSTONE_VENDOR', 'mreschke/keystone'),
+			'api_url' => env('KEYSTONE_API_URL'),
+			'api_version' => env('KEYSTONE_API_VERSION', 'v1'),
+			'api_key' => ENV('KEYSTONE_API_KEY'),
+			'api_secret' => env('KEYSTONE_API_SECRET'),
+			'cache' => env('KEYSTONE_API_CACHE', false),
 		],
 
 	],
 
 	// Is this a keystone rest server install
 	'server' => env('KEYSTONE_SERVER', false),
+	'server_url' => env('KEYSTONE_SERVER_URL'),
 
 ];

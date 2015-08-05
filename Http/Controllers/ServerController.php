@@ -1,16 +1,21 @@
 <?php namespace Mreschke\Keystone\Http\Controllers;
 
+use Request;
 use Parsedown;
 use Mreschke\Helpers\Guest;
+use Mreschke\Api\Server;
 use Mreschke\Keystone\KeystoneInterface;
 use Laravel\Lumen\Routing\Controller as Controller;
 
 class ServerController extends Controller {
 
+	protected $api;
 	protected $keystone;
 
-	public function __construct(KeystoneInterface $keystone)
+
+	public function __construct(Server $api, KeystoneInterface $keystone)
 	{
+		$this->api = $api;
 		$this->keystone = $keystone;
 	}
 
@@ -27,40 +32,46 @@ class ServerController extends Controller {
 		return $isCurl ? $content : view('keystone::server.index', compact('content'));
 	}
 
+	protected function authorized()
+	{
+		return $this->api->verify(
+			Request::header('Authorization'),
+			Request::method(),
+			Request::url()
+		);
+	}
+
 	public function namespaces()
 	{
-		list($apiKey, $signature) = explode(':', \Request::header('Authorization'));
+		if ($client = $this->authorized()) {
 
-		$usersSecret = '$2y$10$5/iofPrVi0g/y0NWRwKme.vjUiySz8W6gKTfkq/xJn4Wjr0YK.WO2';
-
-		$url = 'http://keystone.xendev1.dynatronsoftware.com';
-		$uri = 'namespaces';
-
-		$data = ''; # get payload
-
-
-		$stringToSign = "$url/$uri/".md5($uri.$data).md5(gmdate("Ymd"));
-		$rebuild = base64_encode(hash_hmac('sha1', $stringToSign, $usersSecret));
-		#$rebuild = $stringToSign;
-
-
-		if ($signature == $rebuild) {
-			// API Access Granted for user of $apiKey
 
 			#return response()->json($this->keystone->namespaces());
 			#test
 			$x = $this->keystone->namespaces();
 			$x[] = 'added by rest serve';
-			$x[] = $apiKey;
-			$x[] = $signature;
-			$x[] = $rebuild;
 
-			return response()->json($x);
+			$response = [
+				'data' => $x,
+				'links' => ['link one', 'link two'],
+				'client' => $client
+			];
 
+			
+
+		} else {
+			$response = [
+				'error' => 'blah'
+
+			];
 		}
+
+		return response()->json($response);
+
 
 
 	}
+
 
 	public function keys()
 	{

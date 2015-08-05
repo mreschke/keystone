@@ -1,7 +1,7 @@
 <?php namespace Mreschke\Keystone;
 
+use Mreschke\Api\Client;
 use InvalidArgumentException;
-use GuzzleHttp\Client as Guzzle;
 
 /**
  * Keystone Manager
@@ -12,11 +12,6 @@ use GuzzleHttp\Client as Guzzle;
 class Keystone implements KeystoneInterface
 {
 
-	/**
-	 * The application instance.
-	 *
-	 * @var \Illuminate\Foundation\Application
-	 */
 	protected $app;	
 
 	/**
@@ -55,11 +50,13 @@ class Keystone implements KeystoneInterface
 			case 'native':
 				return new NativeConnection($config, new Metadata($config));
 			case 'http':
-				return new HttpConnection($config,
-					new Guzzle([
-						'base_uri' => $config['url']
-					])
-				);
+				return new HttpConnection($config, new Client(
+					$config['vendor'],
+					$config['api_url'],
+					$config['api_version'],
+					$config['api_key'],
+					$config['api_secret']
+				));
 		}
 	}
 
@@ -71,7 +68,7 @@ class Keystone implements KeystoneInterface
 	 */
 	protected function getConfig($name)
 	{
-		$connections = $this->app['config']['keystone.connections'];
+		$connections = $this->app['config']['mreschke.keystone.connections'];
 		if (is_null($config = array_get($connections, $name))) {
 			throw new InvalidArgumentException("Connection [$name] not configured.");
 		}
@@ -84,7 +81,7 @@ class Keystone implements KeystoneInterface
 	 */
 	protected function getDefaultConnection()
 	{
-		return $this->app['config']['keystone.default'];
+		return $this->app['config']['mreschke.keystone.default'];
 	}
 
 	/**
