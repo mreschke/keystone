@@ -19,7 +19,7 @@ class NativeConnection implements ConnectionInterface
 	protected $path;
 	protected $ns;
 	protected $processingTransaction;
-	protected $meta;	
+	protected $meta;
 
 	public function __construct($config, Metadata $metadata)
 	{
@@ -126,7 +126,7 @@ class NativeConnection implements ConnectionInterface
 					$return = array();
 					foreach ($index as $item) {
 						// Do not attempt to unserialize hash content, leave as is
-						$return[$item] = $this->redis->hget($key, $item);	
+						$return[$item] = $this->redis->hget($key, $item);
 					}
 					return $return;
 				} else {
@@ -167,7 +167,7 @@ class NativeConnection implements ConnectionInterface
 						// Return single value
 						if (property_exists($value, $index)) return $value->$index;
 					}
-					
+
 				}
 				return null; //cannot pluck from unserialized string or serialized array
 			}
@@ -256,7 +256,7 @@ class NativeConnection implements ConnectionInterface
 			$this->redis->del($key);
 			foreach ($value as $item => $data) {
 				$this->redis->hset($key, $item, $data);
-			}				
+			}
 		} elseif (is_array($value)) {
 			// Use redis lists to store this array
 			$this->redis->del($key);
@@ -265,7 +265,7 @@ class NativeConnection implements ConnectionInterface
 			}
 		} else {
 			// Use redis strings to store this object
-			$this->redis->set($key, $value);	
+			$this->redis->set($key, $value);
 		}
 		$this->meta->put($key);
 	}
@@ -345,7 +345,7 @@ class NativeConnection implements ConnectionInterface
 						// Was a serialized object, append properties
 						foreach ($value as $item => $data) {
 							$original->$item = $data;
-						}					
+						}
 						$this->serialize($key, $original);
 					} elseif (is_string($original) && is_string($value)) {
 						// Just a string
@@ -396,12 +396,12 @@ class NativeConnection implements ConnectionInterface
 					// Remove from list
 					foreach ($index as $item) {
 						$this->redis->lrem($key, 1, $item);
-					}					
+					}
 				} elseif ($type == 'hash') {
 					// Remove from hash
 					foreach ($index as $item) {
 						$this->redis->hdel($key, $item);
-					}					
+					}
 				} else {
 					// Remove from serialized string
 					$original = $this->get($key);
@@ -454,7 +454,7 @@ class NativeConnection implements ConnectionInterface
 				unlink($path);
 			}
 		}
-	}	
+	}
 
 	/**
 	 * Check if an entire key exists, or items in a key
@@ -520,17 +520,69 @@ class NativeConnection implements ConnectionInterface
 		$key = null;
 		if (str_contains($filter, '::')) $key = $filter;
 		return $this->transaction($key, function($ns) use($filter) {
+			// I store all keystone keys in a keys:all SET.
+			// Redis docs say its best NOT to simply use the KEYS function in production.
+			// Best to use SCAN to scan KEYS or SSCAN to scan a SET.  But SSCAN only
+			// return 10 results and requires itteration.  Predis has an itterator
+			// but it seems double slow from simply pulling all smemebers to using PHP
+			// to filter results.
+
+			// Benchmark, return about 1200 iam/client keys
+			#$this->redis->keys("$ns$filter"); //25ms
+			#$itterator = new Iterator\SetKey($this->redis, $metaKey, "$ns$filter"); //95ms
+			#return $this->redis->sscan($metaKey, 0, ['MATCH' => "$ns$filter"])[1]; //only returns 10, need Itterator instead
+			#return $this->redis->smembers($metaKey);//26ms but has no filter capability
+
 			// Use predis itterator instead of $this->redis->sscan($metaKey, 0, ['MATCH' => "$ns$filter"])[1];
 			// because plain sscan returns only top 10, you would have to itterate manually
-			// Do NOT simply use$this->redis->keys("$ns$filter"); as this is not good in production, thus the sscan
+
+			// Do NOT simply use$this->redis->keys("$ns$filter"); as this is not good in production ???? but why ???? can't remember
+			// redis docs do say DONT use KEYS in production...says use SCAN (reads from KEYS), SSCAN (reas from any SET)
+			// but only return top 10, which is why you need the Itterator below
+
+			// thus the sscan
 			// See http://stackoverflow.com/questions/28545549/how-to-use-scan-with-the-match-option-in-predis
 			$keys = [];
 			if (str_contains($filter, '::')) $filter = null;
 			$metaKey = $this->prefix.$this->metaNs.'::keys:all';
-			foreach (new Iterator\SetKey($this->redis, $metaKey, "$ns$filter") as $sscanRow) {
-				$keys[] = $sscanRow;
+
+			if ($filter == "*") {
+
+				// Fastest to return all keys from the keys:all set
+				return $this->redis->smembers($metaKey);
+
+			} else {
+
+				// Smembers and PHP preg is faster, but perhaps not for large sets ???
+				$method = "smembers";
+				if ($method == 'smembers') {
+					// About 45ms vs predis itterator below
+					// Return all keys from keys:all set and filter in PHP
+					// This is faster than the itterator, by almost double
+					// Though maybe trouble if you get millions of keys?
+					$results = $this->redis->smembers($metaKey);
+					foreach ($results as $key) {
+						$search = "^".preg_replace("'\*'", "(.*)", "$ns$filter")."$";
+						if (preg_match("'$search'", $key)) {
+							$keys[] = $key;
+						}
+					}
+					return $keys;
+
+				} else {
+					// About 98ms vs smembers and PHP preg
+					// OR use predis itterator, which has a filter
+					// Filtering on keys:all set, use predis sscan itterator
+					$itterator = new Iterator\SetKey($this->redis, $metaKey, "$ns$filter");
+					foreach ($itterator as $sscanRow) {
+						$keys[] = $sscanRow;
+					}
+				}
+
+				return $keys;
+
 			}
-			return $keys;
+
 		});
 	}
 
@@ -543,29 +595,112 @@ class NativeConnection implements ConnectionInterface
 	 */
 	public function where($filter = '*', $index = null, $value = null)
 	{
+		// 3 methods to pull values
+		// Get keys, loop keys in PHP, call redis again = 1300ms
+		// Full lua script, one call, loops all keys, gets values = 4500ms (strange so slow?)
+		// Piping+lua combination, get keys in PHP, each key into pipe with lue to determint type = 400ms (winner)
+		// BUT, when results are returned via LUA they are not from predis, so they are in raw redis format, NOT php arrays :(
+
 		$key = null;
 		if (str_contains($filter, '::')) $key = $filter;
 		return $this->transaction($key, function($ns) use($filter, $index, $value) {
 			if (str_contains($filter, '::')) $filter = null;
 			$keys = $this->keys("$ns$filter");
 
-			$values = [];
-			foreach ($keys as $key) {
-				$result = $this->get($key, $index);
-				if (isset($index) && isset($value) && $result != $value) $result = null;
-				if (isset($result)) {
-					if ($key == "$ns$filter") {
-						// One result
-						$values = $result;
+			$method = "php";
+
+			if ($method == "piping+lua") {
+
+				// Use a pipeline to get all values
+				$results = $this->redis->pipeline(function($pipe) use($keys) {
+					foreach ($keys as $key) {
+						$pipe->eval("
+							local type = redis.call('TYPE', '$key')['ok']
+							if type == 'hash' then
+								return redis.call('HGETALL', '$key')
+							elseif type == 'list' then
+								return redis.call('LRANGE', '$key', 0, -1)
+							elseif type == 'set' then
+								return redis.call('SMEMBERS', '$key')
+							end
+
+						", 0);
+					}
+				});
+
+				// The $results will be in exact order of $keys, so use both to make final
+				// $values associative array
+				$values = [];
+				for ($i = 0; $i < count($results); $i++) {
+					if (str_contains($filter, '*')) {
+						$search = preg_replace("'\*'", "(.*)", "$ns$filter");
+						preg_match("'$search'", $keys[$i], $matches);
+						$values[$matches[1]] = $results[$i];
 					} else {
-						// Many results, add * regex as key
-						$values[substr($key, strlen("$ns$filter") -1)] = $result;
+						$values[$keys[$i]] = $results[$i];
 					}
 				}
+				return $values;
+
+			} elseif ($method == "lua") {
+
+				// Other method was to use lua for everything, no piping
+				// This was actually VERY slow, like 4sec vs the 400ms piping + lua above
+				$lua = "
+					local matches = redis.call('KEYS', '$ns$filter')
+
+					local data = {}
+
+					for _, key in ipairs(matches) do
+						-- data[key] = key
+						local type = redis.call('TYPE', key)['ok']
+						if type == 'hash' then
+							data[key] = redis.call('HGETALL', key)
+						elseif type == 'list' then
+							data[key] = redis.call('LRANGE', key, 0, -1)
+						elseif type == 'set' then
+							data[key] = redis.call('SMEMBERS', key)
+						end
+					end
+
+					return cjson.encode(data)
+					--return cmsgpack.pack(data)
+				";
+				return $this->redis->eval($lua, 0);
+
+			} elseif ($method == "php") {
+
+				// Original method, simply loop each key in PHP and call redis again
+				// This was about 1300ms for 1200 keys vs the above piping+lua at 400ms
+				$values = [];
+				foreach ($keys as $key) {
+					#$result = $this->get($key, $index);
+					$result = $this->get($key);
+					if (isset($index) && isset($value) && $result[$index] != $value) $result = null;
+					if (isset($result)) {
+						if ($key == "$ns$filter") {
+							// One result
+							$values = $result;
+						} else {
+							// Many results, add * regex as key
+							if (str_contains($filter, '*')) {
+								$search = preg_replace("'\*'", "(.*)", "$ns$filter");
+								preg_match("'$search'", $key, $matches);
+								$values[$matches[1]] = $result;
+							} else {
+								$values[$key] = $result;
+							}
+						}
+					}
+				}
+				return $values;
+
 			}
 
-			return $values;
+
+
 		});
+
 	}
 
 	/**
@@ -611,7 +746,7 @@ class NativeConnection implements ConnectionInterface
 			$this->redis->expire($key, $minutes * 60);
 		});
 	}*/
-	// FIXME when you get expire for filebackend working	
+	// FIXME when you get expire for filebackend working
 
 	/**
 	 * Remove any expiration from the key
@@ -697,7 +832,7 @@ class NativeConnection implements ConnectionInterface
 	 */
 	private function isAssoc($arr) {
 		return (is_array($arr) && array_keys($arr) !== range(0, count($arr) - 1));
-	}	
+	}
 
 	/**
 	 * Check if this key is a file backend
