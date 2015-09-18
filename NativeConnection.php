@@ -674,9 +674,15 @@ class NativeConnection implements ConnectionInterface
 				// This was about 1300ms for 1200 keys vs the above piping+lua at 400ms
 				$values = [];
 				foreach ($keys as $key) {
-					#$result = $this->get($key, $index);
-					$result = $this->get($key);
-					if (isset($index) && isset($value) && $result[$index] != $value) $result = null;
+					if (isset($index) && isset($value)) {
+						// Querying by index AND value, show all records that match
+						$result = $this->get($key);
+						if ($result[$index] != $value) $result = null;
+					} elseif (isset($index)) {
+						// Querying only an index, show ONLY the inedex entry that matched, not entire record
+						$result = $this->get($key, $index);
+					}
+
 					if (isset($result)) {
 						if ($key == "$ns$filter") {
 							// One result
