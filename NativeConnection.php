@@ -603,6 +603,7 @@ class NativeConnection implements ConnectionInterface
 
 		$key = null;
 		if (str_contains($filter, '::')) $key = $filter;
+
 		return $this->transaction($key, function($ns) use($filter, $index, $value) {
 			if (str_contains($filter, '::')) $filter = null;
 			$keys = $this->keys("$ns$filter");
@@ -689,7 +690,7 @@ class NativeConnection implements ConnectionInterface
 							$values = $result;
 						} else {
 							// Many results, add * regex as key
-							if (str_contains($filter, '*')) {
+							if (str_contains("$ns$filter", '*')) {
 								$search = preg_replace("'\*'", "(.*)", "$ns$filter");
 								preg_match("'$search'", $key, $matches);
 								$values[$matches[1]] = $result;
