@@ -678,7 +678,7 @@ class NativeConnection implements ConnectionInterface
 						// Querying by index AND value, show all records that match
 						$result = $this->get($key);
 						if ($result[$index] != $value) $result = null;
-					} elseif (isset($index)) {
+					} else {
 						// Querying only an index, show ONLY the inedex entry that matched, not entire record
 						$result = $this->get($key, $index);
 					}
