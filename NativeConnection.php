@@ -1,7 +1,7 @@
 <?php namespace Mreschke\Keystone;
 
 use Predis\Client as Predis;
-Use Mreschke\Helpers\String;
+Use Mreschke\Helpers\Str;
 use Predis\Collection\Iterator;
 
 /**
@@ -80,7 +80,7 @@ class NativeConnection implements ConnectionInterface
 			// Do not attempt to unserialize hash content, leave as is
 			return $this->redis->hgetall($key);
 		} else {
-			return String::unserialize($this->redis->get($key));
+			return Str::unserialize($this->redis->get($key));
 		}
 	}
 
@@ -91,7 +91,7 @@ class NativeConnection implements ConnectionInterface
 	 */
 	private function getFile($key, $info)
 	{
-		return String::unserialize(file_get_contents($this->filePath($key, $info['keystonefile'])));
+		return Str::unserialize(file_get_contents($this->filePath($key, $info['keystonefile'])));
 	}
 
 	/**
@@ -233,7 +233,7 @@ class NativeConnection implements ConnectionInterface
 			$filename = $info['keystonefile'];
 		} else {
 			// Key not found, first time insert
-			$filename = String::getMd5(); //random 32char string
+			$filename = Str::getMd5(); //random 32char string
 			$info = array(
 				'keystonefile' => $filename
 			);
@@ -849,7 +849,7 @@ class NativeConnection implements ConnectionInterface
 	private function isFile($key)
 	{
 		if ($this->redis->type($key) == 'string') {
-			$info = String::unserialize($this->redis->get($key));
+			$info = Str::unserialize($this->redis->get($key));
 			if (is_array($info) && isset($info['keystonefile'])) {
 				return $info;
 			}

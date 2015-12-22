@@ -9,7 +9,7 @@ Welcome to the Keystone Lumen Rest Server
 
 
 
-# NOTES 
+# NOTES
 
 for a keystone GUI:
 Redis keeps track of how long a key as NOT been accessed (read)
@@ -53,8 +53,8 @@ DELETE    | /photo/{photo}        | destroy      | photo.destroy
 
 ## ID vs UUID
 
-Do not use auto-increment ids, they can be logically assumed and traversed.  So 
-use GUIDs or UUIDs for all ids - https://github.com/ramsey/uuid or mreschke/helpers/string::getGuid()
+Do not use auto-increment ids, they can be logically assumed and traversed.  So
+use GUIDs or UUIDs for all ids - https://github.com/ramsey/uuid or mreschke/helpers/str::getGuid()
 
 ## PUT vs POST: Fight!
 
@@ -89,7 +89,7 @@ Avoid magic routing, just define every route them manually right into a controll
 	Route::get('users/{id}/favorites', 'UsersController@favorites') # List users favorites
 
 Notice favorites is in the UserController, because favorites are relavant to a user...though if you
-have something like user/{id}/checkins, you might already have a full CheckinsController, so OK to 
+have something like user/{id}/checkins, you might already have a full CheckinsController, so OK to
 put user/checkins there and not in UserControllers.
 
 
@@ -129,5 +129,3 @@ also use same data namespace
 			}
 		}
 	}
-
-
