@@ -3,22 +3,21 @@
 use Mreschke\Keystone\KeystoneInterface;
 use Mreschke\Keystone\Http\Controllers\Controller;
 
-class KeystoneController extends Controller {
+class KeystoneController extends Controller
+{
+    protected $keystone;
 
-	protected $keystone;
+    public function __construct(KeystoneInterface $keystone)
+    {
+        $this->keystone = $keystone;
+    }
 
-	public function __construct(KeystoneInterface $keystone)
-	{
-		$this->keystone = $keystone;
-	}
-
-	/**
-	 * Show the readme
-	 * @return Response
-	 */
-	public function index()
-	{
-		return view('keystone::index');
-	}
-
+    /**
+     * Show the readme
+     * @return Response
+     */
+    public function index()
+    {
+        return view('keystone::index');
+    }
 }

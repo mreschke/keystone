@@ -10,24 +10,23 @@ use Mreschke\Api\Client;
 */
 class HttpConnection implements ConnectionInterface
 {
-	protected $config;
-	protected $api;
+    protected $config;
+    protected $api;
 
-	public function __construct($config, Client $api)
-	{
-		$this->config = $config;
-		$this->api = $api;
-	}
+    public function __construct($config, Client $api)
+    {
+        $this->config = $config;
+        $this->api = $api;
+    }
 
-	public function namespaces()
-	{
-		$response = json_decode($this->api->get('/namespaces'));
+    public function namespaces()
+    {
+        $response = json_decode($this->api->get('/namespaces'));
 
-		#dd($response);
-		
-		if (isset($response->data)) {
-			return $response->data;
-		}
-	}
+        #dd($response);
 
+        if (isset($response->data)) {
+            return $response->data;
+        }
+    }
 }

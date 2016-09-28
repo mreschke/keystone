@@ -9,19 +9,18 @@
 interface KeystoneInterface
 {
 
-	/**
-	 * Get a keystone connection instance
-	 * @param  string $name connection name
-	 * @return \Mreschke\Keystone\Connection
-	 */
-	public function connection($name = null);
+    /**
+     * Get a keystone connection instance
+     * @param  string $name connection name
+     * @return \Mreschke\Keystone\Connection
+     */
+    public function connection($name = null);
 
-	/**
-	 * Dynamically pass methods to the default connection.
-	 * @param  string  $method
-	 * @param  array   $parameters
-	 * @return mixed
-	 */
-	public function __call($method, $parameters);	
-
+    /**
+     * Dynamically pass methods to the default connection.
+     * @param  string  $method
+     * @param  array   $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters);
 }

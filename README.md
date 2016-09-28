@@ -81,12 +81,12 @@ So NEVER use /getUsers or /sendUserMessage...  use /users or POST /user/5/messag
 
 Avoid magic routing, just define every route them manually right into a controller
 
-	Route::post('/users', 'UsersController@create');        #Create
-	Route::get('/users/{id}', 'UsersController@show');      # Read 1 or multiple users
-	Route::put('/users/{id}', 'UsersController@update');    # Update
-	Route::delete('/users/{id}', 'UsersController@delete'); # Delete
-	Route::get('/users', 'UsersController@list');           # List (all with paging and optional filters)
-	Route::get('users/{id}/favorites', 'UsersController@favorites') # List users favorites
+    Route::post('/users', 'UsersController@create');        #Create
+    Route::get('/users/{id}', 'UsersController@show');      # Read 1 or multiple users
+    Route::put('/users/{id}', 'UsersController@update');    # Update
+    Route::delete('/users/{id}', 'UsersController@delete'); # Delete
+    Route::get('/users', 'UsersController@list');           # List (all with paging and optional filters)
+    Route::get('users/{id}/favorites', 'UsersController@favorites') # List users favorites
 
 Notice favorites is in the UserController, because favorites are relavant to a user...though if you
 have something like user/{id}/checkins, you might already have a full CheckinsController, so OK to
@@ -97,35 +97,35 @@ put user/checkins there and not in UserControllers.
 
 Both single and collection returns should be namespaces
 
-	{
-		"data": {
-			...
-		}
-	}
+    {
+        "data": {
+            ...
+        }
+    }
 
 or
 
-	{
-		"data": [
-			{ ... },
-			{ ... }
-		]
-	}
+    {
+        "data": [
+            { ... },
+            { ... }
+        ]
+    }
 
 This gives you the ability to add metadata (status, pagination...) as needed.  If you nest data (like comments below)
 also use same data namespace
 
-	{
-		"data": {
-			"name": "Phil Sturgeon",
-			"id": "511501255"
-			"comments": {
-				"data": [
-					{
-						"id": 123423
-						"text": "MongoDB is web-scale!"
-					}
-				]
-			}
-		}
-	}
+    {
+        "data": {
+            "name": "Phil Sturgeon",
+            "id": "511501255"
+            "comments": {
+                "data": [
+                    {
+                        "id": 123423
+                        "text": "MongoDB is web-scale!"
+                    }
+                ]
+            }
+        }
+    }
