@@ -26,6 +26,20 @@ interface ConnectionInterface
     #public function fileInfo($key);
 
     /**
+     * Get the first value from a list
+     * @param  $key
+     * @return mixed
+     */
+    #public function first($key);
+
+    /**
+     * Get the last value from a list
+     * @param  $key
+     * @return mixed
+     */
+    #public function last($key);
+
+    /**
      * Pluck single/multi value from an associative array, single array
      * Works with serialized values too
      * @param  $key
@@ -33,6 +47,20 @@ interface ConnectionInterface
      * @return mixed
      */
     #public function pluck($key, $index);
+
+    /**
+     * Remove and get the first element in a list (LPOP)
+     * @param  $key
+     * @return mixed
+     */
+    #public function shift($key);
+
+    /**
+     * Remove and get the last element in a list (RPOP)
+     * @param  $key
+     * @return mixed
+     */
+    #public function pop($key);
 
     /**
      * Get a range from an array

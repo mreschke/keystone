@@ -51,7 +51,7 @@ class KeystoneCommand extends Command
             $results = $this->keystone->$action($key, $index);
         }
 
-        if ($isAction('type')) {
+        if ($isAction('type', 'first', 'last', 'shift', 'pop')) {
             $results = $this->keystone->$action($key);
         }
 
@@ -80,8 +80,8 @@ class KeystoneCommand extends Command
                 $this->keystone->$action($key, [$index => $value]);
                 $results = $this->keystone->get($key);
             } else {
-                // Pushing a value onto a list
-                $this->keystone->$action($key, $value);
+                // Pushing a value onto a list (this won't append to strings)
+                $this->keystone->$action($key, [$value]);
                 $this->info("Pushed $value to $key");
             }
         }
@@ -222,7 +222,7 @@ class KeystoneCommand extends Command
             array('end',       null, InputOption::VALUE_OPTIONAL, 'End of array range', -1),
             array('value',     null, InputOption::VALUE_OPTIONAL, 'Value to put or where by', null),
             array('increment', null, InputOption::VALUE_OPTIONAL, 'Increment size', 1),
-            
+
             array('serialize', null, InputOption::VALUE_NONE,     'Enable serialization on put requets'),
             array('unserialize', null, InputOption::VALUE_NONE,   'Unserialize result'),
         );

@@ -109,6 +109,36 @@ class NativeConnection implements ConnectionInterface
     }
 
     /**
+     * Get the first value from a list
+     * @param  $key
+     * @return mixed
+     */
+    public function first($key)
+    {
+        return $this->transaction($key, function ($key) {
+            $type = $this->redis->type($key);
+            if ($type == 'list') {
+                return $this->redis->lindex($key, 0);
+            }
+        });
+    }
+
+    /**
+     * Get the last value from a list
+     * @param  $key
+     * @return mixed
+     */
+    public function last($key)
+    {
+        return $this->transaction($key, function ($key) {
+            $type = $this->redis->type($key);
+            if ($type == 'list') {
+                return $this->redis->lindex($key, -1);
+            }
+        });
+    }
+
+    /**
      * Pluck single/multi value from an associative array, single array
      * Works with serialized values too
      * @param  $key
@@ -172,6 +202,36 @@ class NativeConnection implements ConnectionInterface
                     }
                 }
                 return null; //cannot pluck from unserialized string or serialized array
+            }
+        });
+    }
+
+    /**
+     * Remove and get the first element in a list (LPOP)
+     * @param  $key
+     * @return mixed
+     */
+    public function shift($key)
+    {
+        return $this->transaction($key, function ($key) {
+            $type = $this->redis->type($key);
+            if ($type == 'list') {
+                return $this->redis->lpop($key);
+            }
+        });
+    }
+
+    /**
+     * Remove and get the last element in a list (RPOP)
+     * @param  $key
+     * @return mixed
+     */
+    public function pop($key)
+    {
+        return $this->transaction($key, function ($key) {
+            $type = $this->redis->type($key);
+            if ($type == 'list') {
+                return $this->redis->rpop($key);
             }
         });
     }
@@ -556,39 +616,32 @@ class NativeConnection implements ConnectionInterface
             }
             $metaKey = $this->prefix.$this->metaNs.'::keys:all';
 
-            if ($filter == "*") {
-
-                // Fastest to return all keys from the keys:all set
-                return $this->redis->smembers($metaKey);
-            } else {
-
-                // Smembers and PHP preg is faster, but perhaps not for large sets ???
-                $method = "smembers";
-                if ($method == 'smembers') {
-                    // About 45ms vs predis itterator below
-                    // Return all keys from keys:all set and filter in PHP
-                    // This is faster than the itterator, by almost double
-                    // Though maybe trouble if you get millions of keys?
-                    $results = $this->redis->smembers($metaKey);
-                    foreach ($results as $key) {
-                        $search = "^".preg_replace("'\*'", "(.*)", "$ns$filter")."$";
-                        if (preg_match("'$search'", $key)) {
-                            $keys[] = $key;
-                        }
-                    }
-                    return $keys;
-                } else {
-                    // About 98ms vs smembers and PHP preg
-                    // OR use predis itterator, which has a filter
-                    // Filtering on keys:all set, use predis sscan itterator
-                    $itterator = new Iterator\SetKey($this->redis, $metaKey, "$ns$filter");
-                    foreach ($itterator as $sscanRow) {
-                        $keys[] = $sscanRow;
+            // Smembers and PHP preg is faster, but perhaps not for large sets ???
+            $method = "smembers";
+            if ($method == 'smembers') {
+                // About 45ms vs predis itterator below
+                // Return all keys from keys:all set and filter in PHP
+                // This is faster than the itterator, by almost double
+                // Though maybe trouble if you get millions of keys?
+                $results = $this->redis->smembers($metaKey);
+                foreach ($results as $key) {
+                    $search = "^".preg_replace("'\*'", "(.*)", "$ns$filter")."$";
+                    if (preg_match("'$search'", $key)) {
+                        $keys[] = $key;
                     }
                 }
-
                 return $keys;
+            } else {
+                // About 98ms vs smembers and PHP preg
+                // OR use predis itterator, which has a filter
+                // Filtering on keys:all set, use predis sscan itterator
+                $itterator = new Iterator\SetKey($this->redis, $metaKey, "$ns$filter");
+                foreach ($itterator as $sscanRow) {
+                    $keys[] = $sscanRow;
+                }
             }
+
+            return $keys;
         });
     }
 
@@ -857,7 +910,7 @@ class NativeConnection implements ConnectionInterface
     /**
      * Check if this key is a file backend
      * @param  string  $key
-     * @return false|$info
+     * @return false|string
      */
     private function isFile($key)
     {
