@@ -456,7 +456,7 @@ class NativeConnection implements ConnectionInterface
         $this->transaction($key, function ($key) use ($index) {
             if (isset($index)) {
                 // Remove item(s) from a key
-                if (is_string($index)) {
+                if (!is_array($index)) {
                     $index = [$index];
                 } // convert to array
                 $type = $this->redis->type($key);
@@ -497,6 +497,12 @@ class NativeConnection implements ConnectionInterface
                     }
                     // If just a normal unserialized string, do nothing, cannot forget an index of a string
                 }
+
+                // Redis DELETES a key if its empty, so check if key is gone, if so, delete from meta as well
+                if (!$this->exists($key)) {
+                    $this->meta->forget($key);
+                }
+
             } else {
                 if (!str_contains($key, $this->metaNs)) {
                     // Remove entire key (if not in meta namespace)
