@@ -214,10 +214,19 @@ class NativeConnection implements ConnectionInterface
     public function shift($key)
     {
         return $this->transaction($key, function ($key) {
+            $value = '';
             $type = $this->redis->type($key);
             if ($type == 'list') {
-                return $this->redis->lpop($key);
+                $value = $this->redis->lpop($key);
             }
+
+            // Redis DELETES a key if its empty, so check if key is gone, if so, delete from meta as well
+            if (!$this->exists($key)) {
+                $this->meta->forget($key);
+            }
+
+            // Return value
+            return $value;
         });
     }
 
@@ -229,10 +238,19 @@ class NativeConnection implements ConnectionInterface
     public function pop($key)
     {
         return $this->transaction($key, function ($key) {
+            $value = '';
             $type = $this->redis->type($key);
             if ($type == 'list') {
-                return $this->redis->rpop($key);
+                $value = $this->redis->rpop($key);
             }
+
+            // Redis DELETES a key if its empty, so check if key is gone, if so, delete from meta as well
+            if (!$this->exists($key)) {
+                $this->meta->forget($key);
+            }
+
+            // Return value
+            return $value;
         });
     }
 
