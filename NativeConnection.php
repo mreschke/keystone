@@ -719,7 +719,7 @@ class NativeConnection implements ConnectionInterface
                 // The $results will be in exact order of $keys, so use both to make final
                 // $values associative array
                 $values = [];
-                for ($i = 0; $i < count($results); $i++) {
+                for ($i = 0; $i < cnt($results); $i++) {
                     if (str_contains($filter, '*')) {
                         $search = preg_replace("'\*'", "(.*)", "$ns$filter");
                         preg_match("'$search'", $keys[$i], $matches);
@@ -928,7 +928,7 @@ class NativeConnection implements ConnectionInterface
      */
     private function isAssoc($arr)
     {
-        return (is_array($arr) && array_keys($arr) !== range(0, count($arr) - 1));
+        return (is_array($arr) && array_keys($arr) !== range(0, cnt($arr) - 1));
     }
 
     /**

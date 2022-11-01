@@ -81,12 +81,12 @@ class KeystoneTest extends TestCase
         $keystone = $this->app->make('Mreschke\Keystone');
         $keystonePath = Config::get('dynatron.keystone_path');
         $info = $keystone->fileInfo($this->key);
-        
+
         $this->assertTrue($keystone->exists($this->key));
         $this->assertTrue(isset($info['keystonefile']) && file_exists("$keystonePath/dynatron/framework/$info[keystonefile]"));
 
         $keystone->forget($this->key);
-        
+
         $this->assertFalse($keystone->exists($this->key));
         $this->assertFalse(isset($info['keystonefile']) && file_exists("$keystonePath/dynatron/framework/$info[keystonefile]"));
     }
@@ -131,9 +131,9 @@ class KeystoneTest extends TestCase
     public function push_array_in_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->push($this->key, 'six');
-        $this->assertEquals(count($keystone->get($this->key)), 6);
+        $this->assertEquals(cnt($keystone->get($this->key)), 6);
     }
 
     /** @test */
@@ -148,11 +148,11 @@ class KeystoneTest extends TestCase
     public function forget_array_item_by_value_from_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 6);
+        $this->assertEquals(cnt($keystone->get($this->key)), 6);
         $keystone->forget($this->key, 'six');
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->forget($this->key, ['one', 'three']);
-        $this->assertEquals(count($keystone->get($this->key)), 3);
+        $this->assertEquals(cnt($keystone->get($this->key)), 3);
     }
 
     /** @test */
@@ -160,7 +160,7 @@ class KeystoneTest extends TestCase
     {
         $keystone = $this->app->make('Mreschke\Keystone');
         $keystone->put($this->key, range(1, 5000));
-        $this->assertEquals(count($keystone->get($this->key)), 5000);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5000);
         $this->assertEquals($keystone->type($this->key), 'list');
     }
 
@@ -187,28 +187,28 @@ class KeystoneTest extends TestCase
         $keystone = $this->app->make('Mreschke\Keystone');
         $this->assertEquals($keystone->pluck($this->key, 'two'), 'two here');
         $this->assertEquals($keystone->get($this->key, 'two'), 'two here');
-        $this->assertEquals(count($keystone->pluck($this->key, ['three', 'one'])), 2);
+        $this->assertEquals(cnt($keystone->pluck($this->key, ['three', 'one'])), 2);
     }
 
     /** @test */
     public function push_to_hash_in_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->push($this->key, ['six' => 'six here']);
-        $this->assertEquals(count($keystone->get($this->key)), 6);
+        $this->assertEquals(cnt($keystone->get($this->key)), 6);
     }
 
     /** @test */
     public function forget_hash_key_from_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 6);
+        $this->assertEquals(cnt($keystone->get($this->key)), 6);
         $keystone->forget($this->key, 'six');
         $this->assertFalse($keystone->exists($this->key, 'six'));
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->forget($this->key, ['one', 'three']);
-        $this->assertEquals(count($keystone->get($this->key)), 3);
+        $this->assertEquals(cnt($keystone->get($this->key)), 3);
     }
 
     /** @test */
@@ -233,7 +233,7 @@ class KeystoneTest extends TestCase
         $keystone = $this->app->make('Mreschke\Keystone');
         $this->assertEquals($keystone->pluck($this->key, 'first'), 'Matthew');
         $this->assertEquals($keystone->get($this->key, 'first'), 'Matthew');
-        $this->assertEquals(count($keystone->pluck($this->key, ['last', 'first'])), 2);
+        $this->assertEquals(cnt($keystone->pluck($this->key, ['last', 'first'])), 2);
     }
 
     /** @test */
@@ -242,7 +242,7 @@ class KeystoneTest extends TestCase
         $keystone = $this->app->make('Mreschke\Keystone');
         $keystone->push($this->key, ['email' => 'mreschke@dynatronsoftware.com']);
         $this->assertEquals($keystone->pluck($this->key, 'email'), 'mreschke@dynatronsoftware.com');
-        $this->assertEquals(count($keystone->pluck($this->key, ['last', 'email'])), 2);
+        $this->assertEquals(cnt($keystone->pluck($this->key, ['last', 'email'])), 2);
     }
 
     /** @test */
@@ -315,7 +315,7 @@ class KeystoneTest extends TestCase
     {
         $keystone = $this->app->make('Mreschke\Keystone');
         $this->assertEquals($keystone->pluck($this->key, 'three'), 'three here');
-        $this->assertEquals(count($keystone->pluck($this->key, ['two', 'four'])), 2);
+        $this->assertEquals(cnt($keystone->pluck($this->key, ['two', 'four'])), 2);
     }
 
     /** @test */
@@ -332,11 +332,11 @@ class KeystoneTest extends TestCase
     public function forget_assoc_key_from_serialized_assoc_in_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 6);
+        $this->assertEquals(cnt($keystone->get($this->key)), 6);
         $keystone->forget($this->key, 'six');
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->forget($this->key, ['one', 'two']);
-        $this->assertEquals(count($keystone->get($this->key)), 3);
+        $this->assertEquals(cnt($keystone->get($this->key)), 3);
     }
 
     /** @test */
@@ -354,11 +354,11 @@ class KeystoneTest extends TestCase
     public function forget_a_value_from_serialized_array_in_redis()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        $this->assertEquals(count($keystone->get($this->key)), 5);
+        $this->assertEquals(cnt($keystone->get($this->key)), 5);
         $keystone->forget($this->key, 'one');
-        $this->assertEquals(count($keystone->get($this->key)), 4);
+        $this->assertEquals(cnt($keystone->get($this->key)), 4);
         $keystone->forget($this->key, ['three', 'five']);
-        $this->assertEquals(count($keystone->get($this->key)), 2);
+        $this->assertEquals(cnt($keystone->get($this->key)), 2);
     }
 
     /** @test */
@@ -382,29 +382,29 @@ class KeystoneTest extends TestCase
         $keys = $keystone->ns($this->testNamespace)->keys();
         sort($keys);
         $this->assertEquals($keys[1], 'keystone:keystone/unittest::dealer:1:green');
-        $this->assertEquals(count($keys), 3);
+        $this->assertEquals(cnt($keys), 3);
     }
 
     /** @test */
     public function list_values()
     {
         $keystone = $this->app->make('Mreschke\Keystone');
-        
+
         $values = $keystone->ns($this->testNamespace)->where();
-        $this->assertEquals(count($values), 3);
-        
+        $this->assertEquals(cnt($values), 3);
+
         $values = $keystone->where($this->testNamespace."::*");
-        $this->assertEquals(count($values), 3);
+        $this->assertEquals(cnt($values), 3);
 
         $values = $keystone->ns($this->testNamespace)->values();
-        $this->assertEquals(count($values), 3);
-        
+        $this->assertEquals(cnt($values), 3);
+
         $values = $keystone->ns($this->testNamespace)->where('dealer:1:*');
-        $this->assertEquals(count($values), 3);
+        $this->assertEquals(cnt($values), 3);
         $this->assertEquals($values['red'], 'two');
-        
+
         $values = $keystone->ns($this->testNamespace)->values('dealer:1:*');
-        $this->assertEquals(count($values), 3);
+        $this->assertEquals(cnt($values), 3);
         $this->assertEquals($values['red'], 'two');
     }
 
