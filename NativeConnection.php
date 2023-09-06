@@ -17,6 +17,7 @@ class NativeConnection implements ConnectionInterface
     protected $rootNs;
     protected $metaNs;
     protected $path;
+    protected $maxRedisSize;
     protected $ns;
     protected $processingTransaction;
     protected $meta;
@@ -26,6 +27,7 @@ class NativeConnection implements ConnectionInterface
         $this->redis = new Predis([
             'scheme' => 'tcp',
             'host' => $config['host'],
+            'password' => $config['password'],
             'port' => $config['port'],
             'database' => $config['database']
         ]);

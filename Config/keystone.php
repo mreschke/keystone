@@ -8,11 +8,12 @@ return [
 
     // Keystone connections
     'connections' => [
-        
+
         'native' => [
             'driver' => 'native',
             'vendor' => env('KEYSTONE_VENDOR', 'mreschke/keystone'),
             'host' => env('KEYSTONE_HOST', '127.0.0.1'),
+            'password' => env('KEYSTONE_PASSWORD'),
             'port' => env('KEYSTONE_PORT', 6379),
             'database' => env('KEYSTONE_DATABASE', 0),
             'prefix' => env('KEYSTONE_PREFIX', 'keystone:'),
