@@ -19,6 +19,7 @@ class Metadata
         $this->redis = new Predis([
             'scheme' => 'tcp',
             'host' => $config['host'],
+            'password' => $config['password'],
             'port' => $config['port'],
             'database' => $config['database']
         ]);
@@ -36,7 +37,7 @@ class Metadata
     {
         $metaKey = $this->prefix.$this->ns.'::keys';
         $ns = $this->nsFromKey($key);
-        
+
         // Add to list of all keys
         $this->redis->sadd("${metaKey}:all", $key);
 
